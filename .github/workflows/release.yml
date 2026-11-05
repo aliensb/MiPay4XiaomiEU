@@ -22,6 +22,10 @@ jobs:
             codename: houji
             version: OS3.0.5.0.WNCCNXM
             rom: houji-ota_full-OS3.0.5.0.WNCCNXM-user-16.0-306ce971bf.zip
+          - device: Xiaomi 15 Ultra EEA
+            codename: xuanyuan
+            version: OS3.0.306.0.WOACNXM
+            rom: xuanyuan-ota_full-OS3.0.306.0.WOACNXM-user-16.0-c0d4770ecf.zip
           - device: Xiaomi 17
             codename: pudding
             version: OS3.0.319.0.WPCCNXM
@@ -75,6 +79,7 @@ jobs:
           df -h
 
       - name: Assemble module
+        if: matrix.codename != 'xuanyuan'
         run: |
           for app in MINextpay MITSMClient UPTsmService MIUISuperMarket; do
             cp -a "./product/app/$app" "./module/system/app/$app"
@@ -82,9 +87,16 @@ jobs:
           rm -f ./module/system/app/.gitkeep
 
       - name: Package module
+        env:
+          CODENAME: ${{ matrix.codename }}
+          PACKAGE: MiPay4XiaomiEU-${{ matrix.version }}.zip
         run: |
-          cd module/
-          zip -r "../MiPay4XiaomiEU-${{ matrix.version }}.zip" *
+          if [ "$CODENAME" = xuanyuan ]; then
+            python3 xuanyuan/package.py product "$PACKAGE"
+          else
+            cd module/
+            zip -r "../$PACKAGE" *
+          fi
 
       - name: Upload package
         uses: actions/upload-artifact@v4
